@@ -1,0 +1,171 @@
+import { human, video, humanConfig, stt } from "/processing.js"
+import { assets } from "./assets/assetManager.js";
+
+// Config/util
+const eyeSpeed = 0.025;
+const pupilMovement = 1; // 0 to 1 value (1.0 goes to the very edge of the eye)
+const frameUpdateSpeed = 150; // super expensive
+
+function lerp(start, end, t) {
+    return start + (end - start) * t;
+}
+
+// Canvas
+const canvas = document.getElementById("displayCanvas");
+const ctx = canvas.getContext("2d");
+
+let eyeSize, pupilSize, eyeRange, pupilRange;
+
+function updateSizes() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    eyeSize = canvas.height * 0.1;
+    pupilSize = eyeSize * 0.5;
+    eyeRange = canvas.height * .5;
+
+    // Calculates max movement so the pupil stays inside the eye geometry
+    pupilRange = (eyeSize - pupilSize) * pupilMovement;
+}
+window.addEventListener("resize", updateSizes);
+updateSizes();
+
+const frameData = {
+    objects: [],
+    eyes: []
+};
+
+function newEye() {
+    const eye = {
+        fade: 0,
+        pupilX: canvas.width / 2,
+        pupilY: canvas.height / 2,
+        eyeX: canvas.width / 2,
+        eyeY: canvas.height / 2,
+        targetX: canvas.width / 2,
+        targetY: canvas.height / 2,
+        dead: false
+    };
+    frameData.eyes.push(eye);
+    return eye;
+}
+
+function updateEye(index, x, y) {
+    let eye = frameData.eyes[index];
+    if (!eye) {
+        eye = newEye();
+    }
+
+    if (x !== undefined && y !== undefined) {
+        eye.targetX = x;
+        eye.targetY = y;
+    }
+
+    eye.fade = lerp(eye.fade, index > frameData.objects.length - 1 ? 0 : 1, eyeSpeed);
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    const dxCenter = eye.targetX - centerX;
+    const dyCenter = eye.targetY - centerY;
+    const distToCenter = Math.hypot(dxCenter, dyCenter);
+
+    const dirX = distToCenter === 0 ? 0 : (dxCenter / distToCenter);
+    const dirY = distToCenter === 0 ? 0 : (dyCenter / distToCenter);
+
+    let eyeTargetX, eyeTargetY;
+
+    if (distToCenter > eyeRange) {
+        eyeTargetX = eye.targetX - eyeSize * pupilMovement * dirX;
+        eyeTargetY = eye.targetY - eyeSize * pupilMovement * dirY;
+    } else {
+        eyeTargetX = eye.targetX;
+        eyeTargetY = eye.targetY;
+    }
+
+    eye.eyeX = lerp(eye.eyeX, eyeTargetX, eyeSpeed);
+    eye.eyeY = lerp(eye.eyeY, eyeTargetY, eyeSpeed);
+    eye.pupilX = lerp(eye.pupilX, eye.targetX, eyeSpeed);
+    eye.pupilY = lerp(eye.pupilY, eye.targetY, eyeSpeed);
+
+    const dxEye = eye.pupilX - eye.eyeX;
+    const dyEye = eye.pupilY - eye.eyeY;
+    const distFromEye = Math.hypot(dxEye, dyEye) || 1;
+
+    if (distFromEye > pupilRange) {
+        eye.pupilX = eye.eyeX + (dxEye / distFromEye) * pupilRange;
+        eye.pupilY = eye.eyeY + (dyEye / distFromEye) * pupilRange;
+    }
+
+    if (eye.fade <= 0.001) {
+        eye.dead = true;
+    } else {
+        eye.dead = false;
+    }
+}
+
+function updateFrame() {
+    human.detect(video, humanConfig).then(dat => {
+        if (!dat.object) return;
+
+        frameData.objects = dat.object.filter(item =>
+            item.label === "person" || item.label === "dog" || item.label === "cat"
+        );
+
+        for (let i = 0; i < frameData.objects.length; i++) {
+            const item = frameData.objects[i];
+            const [x, y, width, height] = item.boxRaw;
+
+            const cx = 1 - (x + (width / 2));
+            const cy = y + (height / 2);
+
+            const mx = canvas.width * cx;
+            const my = canvas.height * cy;
+
+            updateEye(i, mx, my);
+        }
+    })
+}
+setInterval(updateFrame, frameUpdateSpeed);
+
+function renderLoop() {
+    let vidXS = canvas.width / video.videoWidth || 1;
+    let vidYS = canvas.height / video.videoHeight || 1;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    // ctx.drawImage(video, 0, 0, video.videoWidth * vidXS, video.videoHeight * vidYS);
+
+    for (let i = 0; i < frameData.eyes.length; i++) {
+        updateEye(i);
+        const eye = frameData.eyes[i];
+
+        ctx.globalAlpha = eye.fade;
+        ctx.beginLayer();
+        const eyeRenderSize = eyeSize + pupilSize
+
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(eye.eyeX, eye.eyeY, eyeRenderSize * .75, 0, 2 * Math.PI, false);
+        ctx.fill();
+
+        ctx.fillStyle = "black";
+        ctx.beginPath();
+        ctx.arc(eye.pupilX, eye.pupilY, pupilSize, 0, 2 * Math.PI, false);
+        ctx.fill();
+
+        ctx.drawImage(assets.eye, eye.eyeX - eyeRenderSize, eye.eyeY - eyeRenderSize, eyeRenderSize * 2, eyeRenderSize * 2);
+        ctx.endLayer();
+    }
+
+    ctx.restore();
+
+    frameData.eyes = frameData.eyes.filter(e => !e.dead);
+
+    requestAnimationFrame(renderLoop);
+}
+
+export { renderLoop }

@@ -1,0 +1,12 @@
+{
+  "name": "bigbrother",
+  "version": "1.0.0",
+  "description": "a replacement for amazon echos",
+  "license": "ISC",
+  "author": "ayden greenan",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
