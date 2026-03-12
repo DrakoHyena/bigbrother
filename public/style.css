@@ -2,10 +2,13 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: 'Courier New', Courier, monospace;
 }
 
-body {
+body,
+html {
     margin: 0;
+    background: black;
 }
 
 video {
@@ -13,9 +16,14 @@ video {
 }
 
 #loadingDiv {
-    display: absolute;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
+    color: white;
 }

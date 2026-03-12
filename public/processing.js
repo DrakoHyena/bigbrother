@@ -1,5 +1,4 @@
 import Human from "https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.esm.js";
-import { updateStatus } from "./loadingManager.js";
 
 const humanConfig = {
     backend: 'webgl',
@@ -134,55 +133,64 @@ const humanConfig = {
     },
 }
 
+const human = new Human();
+const stt = new SpeechRecognition();
+stt.continuous = true;
+stt.lang = "en-US";
+stt.interimResults = false;
+stt.maxAlternatives = 1;
+stt.processLocally = true;
+// TODO: close occasionally to clear results array
+// TODO: add google-chrome only warning/check 
+stt.addEventListener("stop", stt.start)
+stt.addEventListener("result", (e) => {
+    for (let result of e.results) {
+        if (!result.isFinal) continue;
+        const res = result[0];
+        console.log(res.transcript)
+    }
+})
+stt.addEventListener("error", (event) => {
+    console.error("STT Error:", event.error);
+});
+
+
 let inputSource = undefined;
 const video = document.createElement("video");
 video.muted = true;
-const audCtx = new AudioContext({
-    sinkId: { type: "none" },
-    sampleRate: 16000
-});
-let micNode = undefined;
 let interacted = false
 window.addEventListener("click", async () => {
-    if (audCtx.state === 'suspended') {
-        await audCtx.resume();
-    }
     inputSource = navigator.mediaDevices.getUserMedia({
         video: true,
-        audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            channelCount: 1,
-        }
+        audio: false
     })
     inputSource.then((stream) => {
-        micNode = audCtx.createMediaStreamSource(stream)
         video.srcObject = stream;
         video.play();
     }).catch((err) => {
         console.error(err);
-        alert("Failed to capture webcam video or mic audio")
+        alert("Failed to capture webcam video or mic audioi. The program will not run at this time.")
     });
+
+    let sttAvail = await SpeechRecognition.available({ langs: ["en-US"], processLocally: true })
+
+    if (sttAvail === "unavailable") {
+        alert(`Local en-US text to speech is unavailable. Please download or make accesible the relavent language pack. The program will not run at this time.`);
+    } else if (sttAvail === "available") {
+        stt.start();
+        stt.started = true;
+    } else {
+        let downloadRes = await SpeechRecognition.install({
+            langs: ["en-US"],
+            processLocally: true,
+        })
+        if (!downloadRes) alert("Failed to download en-US text to speech. Make sure you have a reliable internet connection and try again. The program will not run at this time.")
+    }
+
+    stt.started = true;
+
     interacted = true;
 });
 
 
-const human = new Human();
-let stt = undefined;
-async function setupProcessing() {
-    updateStatus("Loading ")
-    const voskModule = await window.loadVosklet();
-    const voskModel = await voskModule.createModel("/models/vosk-model-small-en-us-0.15.tar.gz", "English", "vosk-model-small-en-us-0.15");
-    const voskRecognizer = await voskModule.createRecognizer(voskModel, audCtx.sampleRate);
-    voskRecognizer.addEventListener("result", ev => console.log("Result: ", ev.detail));
-    voskRecognizer.addEventListener("partialResult", ev => console.log("Partial result: ", ev.detail));
-    stt = voskRecognizer;
-
-    const audTransferer = await voskModule.createTransferer(audCtx, 128 * 150);
-    audTransferer.port.onmessage = ev => {
-        voskRecognizer.acceptWaveform(ev.data);
-    }
-    micNode.connect(audTransferer);
-}
-
-export { interacted, setupProcessing, human, humanConfig, video, stt, micNode }
+export { interacted, human, humanConfig, video, stt }

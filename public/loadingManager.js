@@ -1,4 +1,4 @@
-import { interacted, micNode, setupProcessing } from "./processing.js";
+import { interacted, stt } from "./processing.js";
 import { renderLoop } from "./rendering.js";
 
 const loadingDiv = document.getElementById("loadingDiv");
@@ -19,10 +19,9 @@ function assetsDoneLoading() {
 
 const loadingInterval = setInterval(() => {
     if (assetsDoneLoadingFlag === false) return;
-    if (!window.loadVosklet || !micNode) return updateStatus("Loading Vosk", "This could take a minute")
+    if (!stt.started) return updateStatus("Installing Microphone Bugs", "(Big Brother should always be in the know)")
     if (!interacted) return updateStatus("Click anywhere to invite Big Brother into your home", "This is your last chance to exit.")
     loadingDiv.remove();
-    setupProcessing();
     renderLoop();
     clearInterval(loadingInterval)
 }, 10);

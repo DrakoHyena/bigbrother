@@ -135,8 +135,6 @@ function renderLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
     // ctx.drawImage(video, 0, 0, video.videoWidth * vidXS, video.videoHeight * vidYS);
 
     for (let [id, eye] of frameData.eyes) {
