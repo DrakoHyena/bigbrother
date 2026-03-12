@@ -123,10 +123,11 @@ function updateFrame() {
             const my = canvas.height * cy;
 
             updateEye(i, mx, my);
+            setTimeout(updateFrame);
         }
     })
 }
-setInterval(updateFrame, frameUpdateSpeed);
+updateFrame();
 
 function renderLoop() {
     let vidXS = canvas.width / video.videoWidth || 1;
