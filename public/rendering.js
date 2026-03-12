@@ -4,7 +4,6 @@ import { assets } from "./assets/assetManager.js";
 // Config/util
 const eyeSpeed = 0.025;
 const pupilMovement = 1; // 0 to 1 value (1.0 goes to the very edge of the eye)
-const frameUpdateSpeed = 150; // super expensive
 
 function lerp(start, end, t) {
     return start + (end - start) * t;
@@ -32,10 +31,10 @@ updateSizes();
 
 const frameData = {
     objects: [],
-    eyes: []
+    eyes: new Map()
 };
 
-function newEye() {
+function newEye(id) {
     const eye = {
         fade: 0,
         pupilX: canvas.width / 2,
@@ -46,14 +45,14 @@ function newEye() {
         targetY: canvas.height / 2,
         dead: false
     };
-    frameData.eyes.push(eye);
+    frameData.eyes.set(id, eye);
     return eye;
 }
 
-function updateEye(index, x, y) {
-    let eye = frameData.eyes[index];
+function updateEye(id, x, y) {
+    let eye = frameData.eyes.get(id);
     if (!eye) {
-        eye = newEye();
+        eye = newEye(id);
     }
 
     if (x !== undefined && y !== undefined) {
@@ -61,7 +60,7 @@ function updateEye(index, x, y) {
         eye.targetY = y;
     }
 
-    eye.fade = lerp(eye.fade, index > frameData.objects.length - 1 ? 0 : 1, eyeSpeed);
+    eye.fade = lerp(eye.fade, id > frameData.objects.length - 1 ? 0 : 1, eyeSpeed);
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
@@ -122,9 +121,9 @@ function updateFrame() {
             const mx = canvas.width * cx;
             const my = canvas.height * cy;
 
-            updateEye(i, mx, my);
-            setTimeout(updateFrame);
+            updateEye(item.id, mx, my);
         }
+        setTimeout(updateFrame);
     })
 }
 updateFrame();
@@ -140,9 +139,8 @@ function renderLoop() {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     // ctx.drawImage(video, 0, 0, video.videoWidth * vidXS, video.videoHeight * vidYS);
 
-    for (let i = 0; i < frameData.eyes.length; i++) {
-        updateEye(i);
-        const eye = frameData.eyes[i];
+    for (let [id, eye] of frameData.eyes) {
+        updateEye(id);
 
         ctx.globalAlpha = eye.fade;
         ctx.beginLayer();
@@ -160,11 +158,14 @@ function renderLoop() {
 
         ctx.drawImage(assets.eye, eye.eyeX - eyeRenderSize, eye.eyeY - eyeRenderSize, eyeRenderSize * 2, eyeRenderSize * 2);
         ctx.endLayer();
+
+        if (eye.dead === true) {
+            frameData.eyes.delete(id)
+        }
     }
 
     ctx.restore();
 
-    frameData.eyes = frameData.eyes.filter(e => !e.dead);
 
     requestAnimationFrame(renderLoop);
 }
