@@ -1,11 +1,10 @@
 import { interacted, stt } from "./processing.js";
-import { renderLoop } from "./rendering.js";
+import { renderLoop, ctx } from "./rendering.js";
 
 const loadingDiv = document.getElementById("loadingDiv");
 const statusText = document.getElementById("statusText");
 const subStatusText = document.getElementById("subStatusText");
 
-let isDoneLoading = false;
 let assetsDoneLoadingFlag = false;
 
 function updateStatus(main, sub) {
@@ -18,9 +17,16 @@ function assetsDoneLoading() {
 }
 
 const loadingInterval = setInterval(() => {
-    if (assetsDoneLoadingFlag === false) return;
-    if (!stt.started) return updateStatus("Installing Microphone Bugs", "(Big Brother should always be in the know)")
-    if (!interacted) return updateStatus("Click anywhere to invite Big Brother into your home", "This is your last chance to exit.")
+    if (!!window.navigator.userAgentData.brands.filter(e => e.brand === 'Google Chrome').length === false)
+        return updateStatus("Big Brother requires that you use Google-Chrome", "(This is due to Google-Chrome specific features)")
+    if (!!ctx.beginLayer === false)
+        return updateStatus("Big Brother requires browser features you dont have enabled", "Go to chrome://flags and enable Experimental Web Platform Features")
+    if (assetsDoneLoadingFlag === false)
+        return; // updateStatus in assetLoading
+    if (!interacted)
+        return updateStatus("Click anywhere to invite Big Brother into your home", "This is your last chance to exit.")
+    if (!stt.started)
+        return updateStatus("Installing Microphone Bugs", "(Big Brother should always be in the know)")
     loadingDiv.remove();
     renderLoop();
     clearInterval(loadingInterval)

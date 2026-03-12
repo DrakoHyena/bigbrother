@@ -168,4 +168,4 @@ function renderLoop() {
     requestAnimationFrame(renderLoop);
 }
 
-export { renderLoop }
+export { renderLoop, ctx }

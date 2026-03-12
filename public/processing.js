@@ -135,21 +135,18 @@ const humanConfig = {
 
 const human = new Human();
 const stt = new SpeechRecognition();
-stt.continuous = true;
+stt.continuous = false;
 stt.lang = "en-US";
 stt.interimResults = false;
-stt.maxAlternatives = 1;
-stt.processLocally = true;
-// TODO: close occasionally to clear results array
-// TODO: add google-chrome only warning/check 
-stt.addEventListener("stop", stt.start)
+stt.maxAlternatives = 3;
+stt.processLocally = false;
+stt.addEventListener("end", () => { stt.start() })
 stt.addEventListener("result", (e) => {
-    for (let result of e.results) {
-        if (!result.isFinal) continue;
-        const res = result[0];
-        console.log(res.transcript)
-    }
+    if (!e.results[0].isFinal) return;
+    const text = e.results[0][0].transcript
+    console.log(text)
 })
+stt.addEventListener("speechend", () => { stt.stop() })
 stt.addEventListener("error", (event) => {
     console.error("STT Error:", event.error);
 });
@@ -169,7 +166,7 @@ window.addEventListener("click", async () => {
         video.play();
     }).catch((err) => {
         console.error(err);
-        alert("Failed to capture webcam video or mic audioi. The program will not run at this time.")
+        alert("Failed to capture webcam video or mic audio. The program will not run at this time.")
     });
 
     let sttAvail = await SpeechRecognition.available({ langs: ["en-US"], processLocally: true })
