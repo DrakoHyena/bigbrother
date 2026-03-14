@@ -152,7 +152,7 @@ function renderLoop() {
 
         ctx.fillStyle = "black";
         ctx.beginPath();
-        ctx.arc(eye.pupilX, eye.pupilY, pupilSize, 0, 2 * Math.PI, false);
+        ctx.arc(eye.pupilX, eye.pupilY, pupilSize + pupilSize * (1 - eye.fade), 0, 2 * Math.PI, false);
         ctx.fill();
 
         ctx.drawImage(assets.eye, eye.eyeX - eyeRenderSize, eye.eyeY - eyeRenderSize, eyeRenderSize * 2, eyeRenderSize * 2);
