@@ -1,4 +1,4 @@
-import { renderVoiceInput } from "./rendering.js";
+import { renderBrainOutput, renderVoiceInput } from "./rendering.js";
 
 const stt = new SpeechRecognition();
 stt.continuous = false;
@@ -96,11 +96,14 @@ stt.addEventListener("result", (e) => {
     console.log("New speech heard", text)
     const textArr = text.split(" ");
     let lastObj = commands;
+    renderBrainOutput("New speech input detected")
     for (let word of textArr) {
         let targetObj = lastObj[word.toLowerCase()] || lastObj["*"];
         if (typeof targetObj === "object") {
+            renderBrainOutput(`Found branch extension "${word}"`);
             lastObj = targetObj
         } else if (typeof targetObj === "function") {
+            renderBrainOutput("Executing function")
             targetObj(text)
             break;
         } else if (typeof targetObj === "undefined") {

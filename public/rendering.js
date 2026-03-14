@@ -178,12 +178,21 @@ const imageContainer = document.getElementById("imageContainer")
 const processingContainer = document.getElementById("processingContainer")
 const voiceContainer = document.getElementById("voiceContainer")
 
-function renderVoiceInput(text) {
+function genOutputTextEle(text) {
     const textEle = document.createElement("p");
     const spanEle = document.createElement("span");
-    spanEle.innerText = (new Date().toLocaleTimeString());
-    textEle.append(spanEle, " " + text);
-    voiceContainer.appendChild(textEle);
+    const date = new Date()
+    spanEle.innerText = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`;
+    textEle.append(spanEle, " " + text)
+    return textEle;
+}
+
+function renderVoiceInput(text) {
+    voiceContainer.appendChild(genOutputTextEle(text));
+}
+
+function renderBrainOutput(text) {
+    processingContainer.appendChild(genOutputTextEle(text))
 }
 
 function showHTML() {
@@ -198,4 +207,4 @@ setInterval(() => {
     }
 }, 1000)
 
-export { renderLoop, ctx, renderVoiceInput, showHTML }
+export { renderLoop, ctx, renderVoiceInput, renderBrainOutput, showHTML }
