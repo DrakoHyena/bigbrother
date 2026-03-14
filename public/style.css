@@ -46,9 +46,17 @@ video {
 }
 
 .outputBox {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     color: white;
     border-style: solid;
     width: calc(50% - 20px);
     height: calc(50% - 20px);
     padding: 5px;
+}
+
+.outputBox span {
+    background: white;
+    color: black;
 }

@@ -175,11 +175,15 @@ const htmlHideTime = 5000;
 const htmlContainer = document.getElementById("htmlContainer")
 const textContainer = document.getElementById("textContainer")
 const imageContainer = document.getElementById("imageContainer")
+const processingContainer = document.getElementById("processingContainer")
+const voiceContainer = document.getElementById("voiceContainer")
 
 function renderVoiceInput(text) {
     const textEle = document.createElement("p");
-    textEle.innerHTML = text;
-    textContainer.appendChild(textEle);
+    const spanEle = document.createElement("span");
+    spanEle.innerText = (new Date().toLocaleTimeString());
+    textEle.append(spanEle, " " + text);
+    voiceContainer.appendChild(textEle);
 }
 
 function showHTML() {
@@ -188,7 +192,7 @@ function showHTML() {
 
 setInterval(() => {
     if (Date.now() - lastHtmlUpdate > htmlHideTime) {
-        htmlContainer.style.opacity = 0;
+        //htmlContainer.style.opacity = 0;
     } else {
         htmlContainer.style.opacity = 1;
     }

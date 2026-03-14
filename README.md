@@ -1,6 +1,9 @@
 # Big Brother
 ### Always watching, always listening.
 
+## Status
+WIP
+
 ## Intended Use
 | Yes      | No              |
 |----------|-----------------|
@@ -16,6 +19,7 @@
 2. Download the project
 3. Add your keys to /public/apiKeys.js (NOTE: these are served to the client, meaning anyone can access these keys.
 Therefore access should be restricted to those you trust.)
+
 ## Rationale/Background
 The inception of this project lies in the introduction of old
 home assistants in my living space, specially Amazon Echos.
