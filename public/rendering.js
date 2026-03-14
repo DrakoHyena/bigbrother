@@ -1,5 +1,6 @@
-import { human, video, humanConfig, stt } from "/processing.js"
-import { assets } from "./assets/assetManager.js";
+import { human, video, humanConfig } from "/videoProcessing.js"
+import { stt } from "/voiceProcessing.js"
+import { assets } from "/assets/assetManager.js";
 
 // Config/util
 const eyeSpeed = 0.025;
@@ -168,4 +169,29 @@ function renderLoop() {
     requestAnimationFrame(renderLoop);
 }
 
-export { renderLoop, ctx }
+// HTML
+let lastHtmlUpdate = Date.now();
+const htmlHideTime = 5000;
+const htmlContainer = document.getElementById("htmlContainer")
+const textContainer = document.getElementById("textContainer")
+const imageContainer = document.getElementById("imageContainer")
+
+function renderVoiceInput(text) {
+    const textEle = document.createElement("p");
+    textEle.innerHTML = text;
+    textContainer.appendChild(textEle);
+}
+
+function showHTML() {
+    lastHtmlUpdate = Date.now();
+}
+
+setInterval(() => {
+    if (Date.now() - lastHtmlUpdate > htmlHideTime) {
+        htmlContainer.style.opacity = 0;
+    } else {
+        htmlContainer.style.opacity = 1;
+    }
+}, 1000)
+
+export { renderLoop, ctx, renderVoiceInput, showHTML }

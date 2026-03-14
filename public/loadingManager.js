@@ -1,5 +1,9 @@
-import { interacted, stt } from "./processing.js";
+import "/videoProcessing.js";
+import { stt } from "/voiceProcessing.js"
 import { renderLoop, ctx } from "./rendering.js";
+
+let interacted = false;
+window.addEventListener("click", () => { interacted = true })
 
 const loadingDiv = document.getElementById("loadingDiv");
 const statusText = document.getElementById("statusText");

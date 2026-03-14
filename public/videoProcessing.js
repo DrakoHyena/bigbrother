@@ -1,4 +1,5 @@
 import Human from "https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.esm.js";
+import { renderVoiceInput } from "./rendering.js";
 
 const humanConfig = {
     backend: 'webgl',
@@ -134,28 +135,10 @@ const humanConfig = {
 }
 
 const human = new Human();
-const stt = new SpeechRecognition();
-stt.continuous = false;
-stt.lang = "en-US";
-stt.interimResults = false;
-stt.maxAlternatives = 3;
-stt.processLocally = false;
-stt.addEventListener("end", () => { stt.start() })
-stt.addEventListener("result", (e) => {
-    if (!e.results[0].isFinal) return;
-    const text = e.results[0][0].transcript
-    console.log(text)
-})
-stt.addEventListener("speechend", () => { stt.stop() })
-stt.addEventListener("error", (event) => {
-    console.error("STT Error:", event.error);
-});
-
 
 let inputSource = undefined;
 const video = document.createElement("video");
 video.muted = true;
-let interacted = false
 window.addEventListener("click", async () => {
     inputSource = navigator.mediaDevices.getUserMedia({
         video: true,
@@ -168,26 +151,7 @@ window.addEventListener("click", async () => {
         console.error(err);
         alert("Failed to capture webcam video or mic audio. The program will not run at this time.")
     });
-
-    let sttAvail = await SpeechRecognition.available({ langs: ["en-US"], processLocally: true })
-
-    if (sttAvail === "unavailable") {
-        alert(`Local en-US text to speech is unavailable. Please download or make accesible the relavent language pack. The program will not run at this time.`);
-    } else if (sttAvail === "available") {
-        stt.start();
-        stt.started = true;
-    } else {
-        let downloadRes = await SpeechRecognition.install({
-            langs: ["en-US"],
-            processLocally: true,
-        })
-        if (!downloadRes) alert("Failed to download en-US text to speech. Make sure you have a reliable internet connection and try again. The program will not run at this time.")
-    }
-
-    stt.started = true;
-
-    interacted = true;
 });
 
 
-export { interacted, human, humanConfig, video, stt }
+export { human, humanConfig, video }
